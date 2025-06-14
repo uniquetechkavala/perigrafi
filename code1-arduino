@@ -1,0 +1,82 @@
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <Wire.h>
+
+#define VREF 5.0
+#define TEMPERATURE_PIN A1
+#define HUMIDITY_PIN A0
+#define ADC_RESOLUTION 1024
+#define SMOKE_PIN A2
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64 
+#define OLED_RESET -1
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+
+float tempC, tempF, RH, analogVolt, smoke;
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("SHT30 Starts up.");
+  Serial.println("Smoke Starts up.");
+
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;);
+  }
+
+  display.clearDisplay();
+  display.setTextSize(99);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.println("SMART PARK");
+  display.display();
+}
+
+void loop() {
+  analogVolt = (float)analogRead(TEMPERATURE_PIN) / ADC_RESOLUTION * VREF;
+
+  
+  tempC = -66.875 + 72.917 * analogVolt;
+  
+  tempF = -88.375 + 131.25 * analogVolt;
+
+  Serial.print("Termperature:");
+  Serial.print(tempC, 1);
+  Serial.print(" C / ");
+  Serial.print(tempF, 1); 
+  Serial.println(" F");
+
+  analogVolt = (float)analogRead(HUMIDITY_PIN) / ADC_RESOLUTION * VREF;
+  RH = -12.5 + 41.667 * analogVolt;
+  Serial.print("Humidity:");
+  Serial.print(RH, 1);
+  Serial.println(" %RH");
+
+  smoke = analogRead(SMOKE_PIN);
+  Serial.print("Smoke: ");
+  Serial.print(smoke);
+  Serial.println();
+
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+
+  display.print("Temp: ");
+  display.print(tempC, 1); 
+  display.println(" C");
+
+  display.print("Hum: ");
+  display.print(RH, 1);
+  display.println(" %RH");
+
+  display.print("Smoke: ");
+  display.println(smoke);
+  
+  display.display();
+
+  delay(2000);
+}
